@@ -1,16 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
 
 </head>
-<body>
 
+<body>
 
 Welcome, {{nick}}
 <a href="/mylist">mylist</a>
 <a href="/logout">logout</a>
+<br>
+<a href="/create_board">CREATE</a>
+<a href="/delete_board">DELETE</a>
+<a href="/edit_board">EDIT</a>
 <h1>BOARD</h1>
-
+<div class="layout">
+    <table>
+        <thead>
+        <tr>
+            <th>NUM</th>
+            <th>TITLE</th>
+            <th>WRITER</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr th:each="board : ${list}">
+                <td th:text="${board.id}">1</td>
+                <td th:text="${board.title">title</td>
+                <td th:text="${board.nick"}>nickname</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>

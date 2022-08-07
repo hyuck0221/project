@@ -1,0 +1,30 @@
+{{>header}}
+
+<form action="/create_board" method="post">
+    <table border="1" width=500>
+        <tr>
+            <th colspan="2">
+                <h2>CREATE BOARD</h2>
+            </th>
+        </tr>
+        <tr>
+            <td>
+                <input name="title" type="text" placeholder="Please enter a title"
+                       maxlength=20
+                       style="width:99%" >
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" height=400>
+                <textarea name="des" placeholder="Please enter a content" style="width: 100%; height: 100%"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" align=right>
+                <a href="/board_list"><h2>EXIT</h2></a> <input type="submit" value="ENTER">
+            </td>
+        </tr>
+    </table>
+</form>
+
+{{>footer}}
