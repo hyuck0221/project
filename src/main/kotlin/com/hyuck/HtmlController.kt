@@ -6,20 +6,30 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.security.MessageDigest
 import javax.servlet.http.HttpSession
+
 
 @Controller
 class HtmlController {
 
     @Autowired
     lateinit var repository: UserRepository
+    var login_user = ""
 
-    @GetMapping("/")
+    @RequestMapping("/")
     fun index(model: Model): String {
-        model.addAttribute("title", "Home")
-        return "index"
+        if(login_user == ""){
+            model.addAttribute("title", "Home")
+            return "index"
+        } else{
+            val db_user = repository.findByUserId(login_user)
+            model.addAttribute("title", "board list")
+            model.addAttribute("nick", db_user.nick)
+            return "board_list"
+        }
     }
 
     fun crypto(ss: String): String {
@@ -37,6 +47,15 @@ class HtmlController {
             response = "sign"
         } else if (formType.equals("login")) {
             response = "login"
+        } else if (formType.equals("mylist")){
+            if(login_user != ""){
+                response = "mylist"
+            } else{
+                response = "login"
+            }
+        } else if(formType.equals("logout")){
+            login_user = ""
+            response = "index"
         }
 
         model.addAttribute("title", response)
@@ -58,7 +77,7 @@ class HtmlController {
         }
         model.addAttribute("title", "sign success")
 
-        return "index"
+        return "login"  //수정
     }
 
     @PostMapping("/login")
@@ -78,9 +97,10 @@ class HtmlController {
 
                 if (cryptoPass.equals(db_pass)) {
                     session.setAttribute("userId", db_user.userId)
-                    model.addAttribute("title", "welcome")
+                    model.addAttribute("title", "board list")
                     model.addAttribute("nick", db_user.nick)
-                    pageName = "welcome"
+                    login_user = userId
+                    pageName = "board_list"
                 }
                 else {
                     model.addAttribute("title", "login")
