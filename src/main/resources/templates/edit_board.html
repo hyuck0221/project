@@ -1,0 +1,30 @@
+{{>header}}
+
+<h1>EDIT</h1>
+<form action="/edit_board" method="post">
+    <table border="1" width=500>
+        <tr>
+            <td>
+                <input name="title" value={{edit_title}}
+                       maxlength=20
+                       style="width:99%" >
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" height=400>
+                <input name="des" value={{edit_des}} style="width: 100%; height: 100%">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" align=right>
+                <select name="look_cheak">
+                    <option value="all" {{select_1}}>all</option>
+                    <option value="look" {{select_2}}>only me</option>
+                </select>
+                <a href="/read_board">EXIT</a> <input type="submit" value="ENTER">
+            </td>
+        </tr>
+    </table>
+</form>
+
+{{>footer}}

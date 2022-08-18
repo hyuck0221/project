@@ -17,6 +17,7 @@ class Board(
     var nick:String,
     var title:String,
     var des:String,
-    var user_id:Long?=null,
-    @Id @GeneratedValue var crud_id:Long?=null
+    var userid:Long?,
+    var look:Boolean,
+    @Id @GeneratedValue var crudid:Long?=null
 )

@@ -7,5 +7,5 @@ interface UserRepository:CrudRepository<User,Long>{
 }
 
 interface BoardRepository: CrudRepository<Board, Long> {
-
+    fun findBycrudid(crudid:Long):Board
 }

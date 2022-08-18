@@ -1,0 +1,12 @@
+{{>header}}
+
+<a href="/board_list">EXIT</a>
+<br/>
+<h1>DELETE</h1>
+<form action="/delete_board" method="post">
+    crud_id:<br/>
+    <input name="crud_id" type="text"/>
+    <input type="submit" value="delete">
+</form>
+
+{{>footer}}

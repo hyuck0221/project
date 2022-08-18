@@ -20,18 +20,20 @@ class HtmlController {
     lateinit var repository: UserRepository
     @Autowired
     lateinit var boardRepository: BoardRepository
+
     var login_user = ""
+    var read_board:Long = 0
 
     @RequestMapping("/")
     fun index(model: Model): String {
         if(login_user == ""){
             model.addAttribute("title", "Home")
+            read_board = 0
             return "index"
         } else{
             val db_user = repository.findByUserId(login_user)
             model.addAttribute("title", "board list")
             model.addAttribute("nick", db_user.nick)
-            model.addAttribute("list", boardRepository.findAll())
             return "board_list"
         }
     }
@@ -59,12 +61,6 @@ class HtmlController {
             } else{
                 response = "login"
             }
-        } else if (formType.equals("mylist")){
-            if(login_user != ""){
-                response = "mylist"
-            } else{
-                response = "login"
-            }
         } else if(formType.equals("logout")){
             login_user = ""
             response = "index"
@@ -74,13 +70,57 @@ class HtmlController {
             } else{
                 response = "login"
             }
+        } else if(formType.equals("delete_board")){
+            if(login_user != ""){
+                response = "delete_board"
+            } else{
+                response = "login"
+            }
+        } else if(formType.equals("read_board")){
+            if(login_user != ""){
+                if(read_board > 0){
+                    response = "read_board"
+                    model.addAttribute("title", "read "+read_board)
+                    if(boardRepository.findBycrudid(read_board).userid == repository.findByUserId(login_user).id){
+                        model.addAttribute("EDIT", "EDIT")
+                    } else{
+                        model.addAttribute("EDIT", "")
+                    }
+                    model.addAttribute("nick", boardRepository.findBycrudid(read_board).nick)
+                    model.addAttribute("b_title", boardRepository.findBycrudid(read_board).title)
+                    model.addAttribute("des", boardRepository.findBycrudid(read_board).des)
+                } else{
+                    response = "board_list"
+                }
+            } else{
+                response = "login"
+            }
+        } else if(formType.equals("edit_board")){
+            if(login_user != ""){
+                if(read_board > 0){
+                    response = "edit_board"
+                    model.addAttribute("edit_title", boardRepository.findBycrudid(read_board).title)
+                    model.addAttribute("edit_des", boardRepository.findBycrudid(read_board).des)
+                    if(boardRepository.findBycrudid(read_board).look){
+                        model.addAttribute("select_1","selected=\"selected\"")
+                        model.addAttribute("select_2","")
+                    } else {
+                        model.addAttribute("select_1","")
+                        model.addAttribute("select_2","selected=\"selected\"")
+                    }
+                } else{
+                    response = "board_list"
+                }
+            } else{
+                response = "login"
+            }
         }
 
 
-
         if(response == "board_list"){
-            model.addAttribute("nick", login_user)
-            model.addAttribute("list", boardRepository.findAll())
+            read_board = 0
+            val db_user = repository.findByUserId(login_user)
+            model.addAttribute("nick", db_user.nick)
         }
         model.addAttribute("title", response)
         return response
@@ -93,15 +133,21 @@ class HtmlController {
         @RequestParam(value = "password") password: String,
         @RequestParam(value = "nick") nick: String
     ): String {
+        var pageName = ""
         try {
+            val db_user = repository.findByUserId(userId)
+            if(db_user.userId != null){
+                pageName = "sign"
+                model.addAttribute("title", "sign failed")
+            }
+        } catch (e: Exception) {
             val cryptoPass = crypto(password)
             repository.save(User(userId, cryptoPass, nick))
-        } catch (e: Exception) {
-            e.printStackTrace()
+            model.addAttribute("title", "sign success")
+            pageName ="login"
         }
-        model.addAttribute("title", "sign success")
 
-        return "login"
+        return pageName
     }
     @PostMapping("/create_board")
     fun postCreateBoard(
@@ -111,13 +157,97 @@ class HtmlController {
     ): String {
         try {
             val db_user = repository.findByUserId(login_user)
-            boardRepository.save(Board(db_user.nick, title, des, db_user.id))
+            boardRepository.save(Board(db_user.nick, title, des, db_user.id, true))
         } catch (e:Exception){
             e.printStackTrace()
         }
-
+        val db_user = repository.findByUserId(login_user)
         model.addAttribute("title", "create board success")
-        model.addAttribute("nick", login_user)
+        model.addAttribute("nick", db_user.nick)
+
+        return "board_list"
+    }
+    @PostMapping("/delete_board")
+    fun postDeleteBoard(
+        model: Model,
+        @RequestParam(value = "crud_id") crud_id: Long
+    ): String {
+        var pageName = ""
+        try {
+            val db_user = repository.findByUserId(login_user)
+            val db_board = boardRepository.findBycrudid(crud_id)
+            if(db_user.id == db_board.userid){
+                boardRepository.deleteById(crud_id)
+                model.addAttribute("title", "delete board success")
+                model.addAttribute("nick", db_user.nick)
+                pageName = "board_list"
+            } else{
+                model.addAttribute("title", "delete board failed")
+                pageName = "delete_board"
+            }
+        } catch (e:Exception){
+            model.addAttribute("title", "delete board failed")
+            pageName = "delete_board"
+        }
+        return pageName
+    }
+    @PostMapping("/board_list")
+    fun postReadBoard(
+        model: Model,
+        @RequestParam(value = "read_id") read_id:Long
+    ): String {
+        var pageName=""
+        try{
+            val db_user = repository.findByUserId(login_user)
+            val db_board = boardRepository.findBycrudid(read_id)
+            if(db_board.look == true || db_board.userid == db_user.id){
+                pageName = "read_board"
+                read_board = read_id
+                model.addAttribute("title", "read "+read_id)
+                if(db_board.userid == db_user.id){
+                    model.addAttribute("EDIT", "EDIT")
+                } else{
+                    model.addAttribute("EDIT", "")
+                }
+                model.addAttribute("nick", db_board.nick)
+                model.addAttribute("b_title", db_board.title)
+                model.addAttribute("des", db_board.des)
+            }
+            else{
+                model.addAttribute("title", "not found read code")
+                model.addAttribute("nick", repository.findByUserId(login_user).nick)
+                pageName="board_list"
+            }
+        } catch (e:Exception){
+            model.addAttribute("title", "not found read code")
+            model.addAttribute("nick", repository.findByUserId(login_user).nick)
+            pageName="board_list"
+        }
+        return pageName
+    }
+    @PostMapping("/edit_board")
+    fun postEditBoard(
+        model: Model,
+        @RequestParam(value = "title") title: String,
+        @RequestParam(value = "des") des: String,
+        @RequestParam(value = "look_cheak") look_cheak: String
+    ): String{
+        try {
+            val look: Boolean
+            if(look_cheak == "all"){
+                look = true
+            } else{
+                look = false
+            }
+            val db_user = repository.findByUserId(login_user)
+            boardRepository.deleteById(read_board)
+            boardRepository.save(Board(db_user.nick, title, des, db_user.id, look))
+        } catch (e:Exception){
+            e.printStackTrace()
+        }
+        val db_user = repository.findByUserId(login_user)
+        model.addAttribute("title", "edit board success")
+        model.addAttribute("nick", db_user.nick)
 
         return "board_list"
     }
@@ -142,7 +272,6 @@ class HtmlController {
                     session.setAttribute("userId", db_user.userId)
                     model.addAttribute("title", "board list")
                     model.addAttribute("nick", db_user.nick)
-                    model.addAttribute("list", boardRepository.findAll())
                     login_user = userId
                     pageName = "board_list"
                 }
@@ -158,4 +287,5 @@ class HtmlController {
         }
         return pageName
     }
+
 }
