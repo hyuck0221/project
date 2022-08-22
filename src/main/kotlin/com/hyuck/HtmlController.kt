@@ -1,5 +1,9 @@
 package com.hyuck
 
+import com.hyuck.entites.board.Board
+import com.hyuck.entites.board.BoardRepository
+import com.hyuck.entites.user.User
+import com.hyuck.entites.user.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
 import org.springframework.stereotype.Repository
@@ -17,9 +21,10 @@ import javax.servlet.http.HttpSession
 class HtmlController {
 
     @Autowired
-    lateinit var repository: UserRepository
+    lateinit var UserRepository: UserRepository
     @Autowired
-    lateinit var boardRepository: BoardRepository
+    lateinit var BoardRepository: BoardRepository
+
 
     var login_user = ""
     var read_board:Long = 0
@@ -31,7 +36,7 @@ class HtmlController {
             read_board = 0
             return "index"
         } else{
-            val db_user = repository.findByUserId(login_user)
+            val db_user = UserRepository.findByUserId(login_user)
             model.addAttribute("title", "board list")
             model.addAttribute("nick", db_user.nick)
             return "board_list"
@@ -81,14 +86,14 @@ class HtmlController {
                 if(read_board > 0){
                     response = "read_board"
                     model.addAttribute("title", "read "+read_board)
-                    if(boardRepository.findBycrudid(read_board).userid == repository.findByUserId(login_user).id){
+                    if(BoardRepository.findBycrudid(read_board).userid == UserRepository.findByUserId(login_user).id){
                         model.addAttribute("EDIT", "EDIT")
                     } else{
                         model.addAttribute("EDIT", "")
                     }
-                    model.addAttribute("nick", boardRepository.findBycrudid(read_board).nick)
-                    model.addAttribute("b_title", boardRepository.findBycrudid(read_board).title)
-                    model.addAttribute("des", boardRepository.findBycrudid(read_board).des)
+                    model.addAttribute("nick", BoardRepository.findBycrudid(read_board).nick)
+                    model.addAttribute("b_title", BoardRepository.findBycrudid(read_board).title)
+                    model.addAttribute("des", BoardRepository.findBycrudid(read_board).des)
                 } else{
                     response = "board_list"
                 }
@@ -99,9 +104,9 @@ class HtmlController {
             if(login_user != ""){
                 if(read_board > 0){
                     response = "edit_board"
-                    model.addAttribute("edit_title", boardRepository.findBycrudid(read_board).title)
-                    model.addAttribute("edit_des", boardRepository.findBycrudid(read_board).des)
-                    if(boardRepository.findBycrudid(read_board).look){
+                    model.addAttribute("edit_title", BoardRepository.findBycrudid(read_board).title)
+                    model.addAttribute("edit_des", BoardRepository.findBycrudid(read_board).des)
+                    if(BoardRepository.findBycrudid(read_board).look){
                         model.addAttribute("select_1","selected=\"selected\"")
                         model.addAttribute("select_2","")
                     } else {
@@ -119,7 +124,7 @@ class HtmlController {
 
         if(response == "board_list"){
             read_board = 0
-            val db_user = repository.findByUserId(login_user)
+            val db_user = UserRepository.findByUserId(login_user)
             model.addAttribute("nick", db_user.nick)
         }
         model.addAttribute("title", response)
@@ -135,14 +140,14 @@ class HtmlController {
     ): String {
         var pageName = ""
         try {
-            val db_user = repository.findByUserId(userId)
+            val db_user = UserRepository.findByUserId(userId)
             if(db_user.userId != null){
                 pageName = "sign"
                 model.addAttribute("title", "sign failed")
             }
         } catch (e: Exception) {
             val cryptoPass = crypto(password)
-            repository.save(User(userId, cryptoPass, nick))
+            UserRepository.save(User(userId, cryptoPass, nick))
             model.addAttribute("title", "sign success")
             pageName ="login"
         }
@@ -156,12 +161,12 @@ class HtmlController {
         @RequestParam(value = "des") des: String
     ): String {
         try {
-            val db_user = repository.findByUserId(login_user)
-            boardRepository.save(Board(db_user.nick, title, des, db_user.id, true))
+            val db_user = UserRepository.findByUserId(login_user)
+            BoardRepository.save(Board(db_user.nick, title, des, db_user.id, true))
         } catch (e:Exception){
             e.printStackTrace()
         }
-        val db_user = repository.findByUserId(login_user)
+        val db_user = UserRepository.findByUserId(login_user)
         model.addAttribute("title", "create board success")
         model.addAttribute("nick", db_user.nick)
 
@@ -174,10 +179,10 @@ class HtmlController {
     ): String {
         var pageName = ""
         try {
-            val db_user = repository.findByUserId(login_user)
-            val db_board = boardRepository.findBycrudid(crud_id)
+            val db_user = UserRepository.findByUserId(login_user)
+            val db_board = BoardRepository.findBycrudid(crud_id)
             if(db_user.id == db_board.userid){
-                boardRepository.deleteById(crud_id)
+                BoardRepository.deleteById(crud_id)
                 model.addAttribute("title", "delete board success")
                 model.addAttribute("nick", db_user.nick)
                 pageName = "board_list"
@@ -198,8 +203,8 @@ class HtmlController {
     ): String {
         var pageName=""
         try{
-            val db_user = repository.findByUserId(login_user)
-            val db_board = boardRepository.findBycrudid(read_id)
+            val db_user = UserRepository.findByUserId(login_user)
+            val db_board = BoardRepository.findBycrudid(read_id)
             if(db_board.look == true || db_board.userid == db_user.id){
                 pageName = "read_board"
                 read_board = read_id
@@ -215,12 +220,12 @@ class HtmlController {
             }
             else{
                 model.addAttribute("title", "not found read code")
-                model.addAttribute("nick", repository.findByUserId(login_user).nick)
+                model.addAttribute("nick", UserRepository.findByUserId(login_user).nick)
                 pageName="board_list"
             }
         } catch (e:Exception){
             model.addAttribute("title", "not found read code")
-            model.addAttribute("nick", repository.findByUserId(login_user).nick)
+            model.addAttribute("nick", UserRepository.findByUserId(login_user).nick)
             pageName="board_list"
         }
         return pageName
@@ -239,13 +244,13 @@ class HtmlController {
             } else{
                 look = false
             }
-            val db_user = repository.findByUserId(login_user)
-            boardRepository.deleteById(read_board)
-            boardRepository.save(Board(db_user.nick, title, des, db_user.id, look))
+            val db_user = UserRepository.findByUserId(login_user)
+            BoardRepository.deleteById(read_board)
+            BoardRepository.save(Board(db_user.nick, title, des, db_user.id, look))
         } catch (e:Exception){
             e.printStackTrace()
         }
-        val db_user = repository.findByUserId(login_user)
+        val db_user = UserRepository.findByUserId(login_user)
         model.addAttribute("title", "edit board success")
         model.addAttribute("nick", db_user.nick)
 
@@ -263,7 +268,7 @@ class HtmlController {
         var pageName=""
         try {
             val cryptoPass = crypto(password)
-            val db_user = repository.findByUserId(userId)
+            val db_user = UserRepository.findByUserId(userId)
 
             if (db_user != null) {
                 val db_pass = db_user.password
