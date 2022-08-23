@@ -1,12 +1,11 @@
 package com.hyuck
 
-import com.hyuck.entites.board.Board
-import com.hyuck.entites.board.BoardRepository
-import com.hyuck.entites.user.User
-import com.hyuck.entites.user.UserRepository
+import com.hyuck.model.board.Board
+import com.hyuck.model.board.BoardRepository
+import com.hyuck.model.user.User
+import com.hyuck.model.user.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
-import org.springframework.stereotype.Repository
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -141,13 +140,11 @@ class HtmlController {
         var pageName = ""
         try {
             val db_user = UserRepository.findByUserId(userId)
-            if(db_user.userId != null){
-                pageName = "sign"
-                model.addAttribute("title", "sign failed")
-            }
+            pageName = "sign"
+            model.addAttribute("title", "sign failed")
         } catch (e: Exception) {
             val cryptoPass = crypto(password)
-            UserRepository.save(User(userId, cryptoPass, nick))
+            UserRepository.save(User(userId, cryptoPass, nick, 1))
             model.addAttribute("title", "sign success")
             pageName ="login"
         }
@@ -162,7 +159,7 @@ class HtmlController {
     ): String {
         try {
             val db_user = UserRepository.findByUserId(login_user)
-            BoardRepository.save(Board(db_user.nick, title, des, db_user.id, true))
+            BoardRepository.save(Board(db_user.nick, title, des, db_user.id, true, 1))
         } catch (e:Exception){
             e.printStackTrace()
         }
@@ -246,7 +243,7 @@ class HtmlController {
             }
             val db_user = UserRepository.findByUserId(login_user)
             BoardRepository.deleteById(read_board)
-            BoardRepository.save(Board(db_user.nick, title, des, db_user.id, look))
+            BoardRepository.save(Board(db_user.nick, title, des, db_user.id, look, 1))
         } catch (e:Exception){
             e.printStackTrace()
         }

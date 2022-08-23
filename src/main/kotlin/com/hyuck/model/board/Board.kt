@@ -1,5 +1,6 @@
-package com.hyuck.entites.board
+package com.hyuck.model.board
 
+import org.jetbrains.annotations.NotNull
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
@@ -9,7 +10,7 @@ class Board(
     var nick:String,
     var title:String,
     var des:String,
-    var userid:Long?,
+    var userid:Long,
     var look:Boolean,
-    @Id @GeneratedValue var crudid:Long?=null
+    @Id @GeneratedValue var crudid:Long
 )
