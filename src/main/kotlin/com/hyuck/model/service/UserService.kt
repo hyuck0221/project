@@ -18,6 +18,9 @@ class UserService(private val UserRepository: UserRepository) {
         return UserRepository.findByUserId(userId)
     }
 
+    fun findById(id: Long): User{
+        return UserRepository.getById(id)
+    }
 
 
     fun getAll(): MutableIterable<User> = UserRepository.findAll()

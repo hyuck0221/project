@@ -5,8 +5,12 @@ import com.hyuck.dtos.Message
 import com.hyuck.dtos.RegisterDTO
 import com.hyuck.model.user.User
 import com.hyuck.model.service.UserService
+import io.jsonwebtoken.Jwt
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -17,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.security.MessageDigest
+import java.util.*
+import javax.servlet.http.Cookie
+import javax.servlet.http.HttpServletResponse
 
 @RequestMapping("users")
 @RestController
@@ -45,20 +52,50 @@ class UserRestController(private val service: UserService){
     }
 
     @PostMapping("login")
-    fun login(@RequestBody body: LoginDTO): ResponseEntity<Any>{
+    fun login(@RequestBody body: LoginDTO, response: HttpServletResponse): ResponseEntity<Any>{
         val user = service.findByUserId(body.userId)
             ?: return ResponseEntity.badRequest().body(Message("User Not Found!"))
             // 해당 유저가 없을 때 유저가 없음을 출력
 
         if(user.password == crypto(body.password)){ // 비밀번호 여부 true:로그인
-            return ResponseEntity.ok(user)
-        }else{
+            val issuer = user.id.toString()  // 토큰이 발행되는 유저의 아이디 저장
+            val jwt = Jwts.builder()  // JWT 생성 (아래는 부가데이터)
+                .setIssuer(issuer)    // 발행되는 유저(유저 아이디)
+                .setExpiration(Date(System.currentTimeMillis()+60*24*1000))
+                //토큰 제한시간 (위 숫자는 1일)
+                .signWith(SignatureAlgorithm.HS256, "secret").compact()
+
+            val cookie = Cookie("jwt", jwt)
+            cookie.isHttpOnly = true
+            response.addCookie(cookie)
+
+            return ResponseEntity.ok(Message("login Success!"))
+        } else {
             return ResponseEntity.badRequest().body(Message("Invalid password!"))
         }
-
-
     }
 
+    @GetMapping("user")
+    fun user(@CookieValue("jwt") jwt: String?): ResponseEntity<Any>{
+        if (jwt == null){
+            return ResponseEntity.status(401).body(Message("unauthenticated"))
+        }
+        val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
+
+        return ResponseEntity.ok(service.findById(body.issuer.toLong()))
+        // 토큰을 받은 유저의 id를 이용해 해당 유저의 정보 return
+    }
+
+    @PostMapping("logout")
+    fun logout(response: HttpServletResponse): ResponseEntity<Any>{
+        var cookie = Cookie("jwt","")
+        cookie.maxAge = 0
+        // 토큰이 없는 쿠키를 만들어 로그아웃한 유저에게 부여
+
+        response.addCookie(cookie)
+
+        return ResponseEntity.ok(Message("LOGOUT success"))
+    }
     @GetMapping
     fun getAllUser() = service.getAll()
     //  /users 주소로 GET 할 시 유저 정보 모두를 불러옴
