@@ -1,11 +1,10 @@
 package com.hyuck.controller
 
-import com.hyuck.dtos.LoginDTO
+import com.hyuck.dtos.user.LoginDTO
 import com.hyuck.dtos.Message
-import com.hyuck.dtos.RegisterDTO
+import com.hyuck.dtos.user.RegisterDTO
 import com.hyuck.model.user.User
 import com.hyuck.model.service.UserService
-import io.jsonwebtoken.Jwt
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.http.HttpStatus
@@ -77,7 +76,7 @@ class UserRestController(private val service: UserService){
 
     @GetMapping("user")
     fun user(@CookieValue("jwt") jwt: String?): ResponseEntity<Any>{
-        if (jwt == null){
+        if (jwt == null){  // 토큰을 부여받지 않았으면 아래 오류 리턴
             return ResponseEntity.status(401).body(Message("unauthenticated"))
         }
         val body = Jwts.parser().setSigningKey("secret").parseClaimsJws(jwt).body
@@ -96,6 +95,9 @@ class UserRestController(private val service: UserService){
 
         return ResponseEntity.ok(Message("LOGOUT success"))
     }
+
+
+
     @GetMapping
     fun getAllUser() = service.getAll()
     //  /users 주소로 GET 할 시 유저 정보 모두를 불러옴

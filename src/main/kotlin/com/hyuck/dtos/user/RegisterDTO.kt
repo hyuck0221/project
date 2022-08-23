@@ -1,4 +1,4 @@
-package com.hyuck.dtos
+package com.hyuck.dtos.user
 
 class RegisterDTO {
     val userId = ""
