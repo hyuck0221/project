@@ -1,16 +1,19 @@
 package com.hyuck
 
+import com.hyuck.interceptor.TokenInterceptor
+import com.hyuck.model.service.JwtService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.EnableWebMvc
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-@EnableWebMvc
 class WebConfig: WebMvcConfigurer {
-    override fun addCorsMappings(registry: CorsRegistry) {
-        registry.addMapping("/**")  // 모든 경로
-            .allowedOrigins("http://localhost:3000", "http://localhost:8080", "http://localhost:4200")
-            .allowCredentials(true)
+
+    override fun addInterceptors(registry: InterceptorRegistry) {
+        registry.addInterceptor(TokenInterceptor())
     }
+
 }
