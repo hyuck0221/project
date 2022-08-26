@@ -35,7 +35,7 @@ class BoardService(private val repository: BoardRepository) {
 
     fun remove(id: Long){
         if(repository.existsById(id)) repository.deleteById(id)
-        else throw ResponseStatusException(HttpStatus.NOT_FOUND) //에러코드 수정
+        else throw ResponseStatusException(HttpStatus.NOT_FOUND)
     }
 
     fun getboard(id: Long, jwt: String): ResponseEntity<Any>{

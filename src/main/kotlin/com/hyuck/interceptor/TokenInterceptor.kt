@@ -4,6 +4,7 @@ import com.hyuck.dtos.Message
 import com.hyuck.model.service.Auth
 import org.springframework.http.ResponseEntity
 import org.springframework.web.method.HandlerMethod
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.HandlerInterceptor
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
